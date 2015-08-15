@@ -1,1 +1,158 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd 
+	    http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
+	<!-- MVC框架配置代码 -->
+	<!-- Activate annotation configured components -->
+	<!-- <context:annotation-config /> -->
+	<context:component-scan base-package="com.swz.wechat">
+		<!-- 不扫描 @service -->
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Service" />
+	</context:component-scan>
+
+	<!-- Activate annotation configured components 定时操作 -->
+	<!-- <task:annotation-driven/> -->
+	<!-- 添加监听器一个 以后这里task代替在SpringMVC中 -->
+	<!-- <listener> -->
+	<!-- <display-name>WxSession</display-name> -->
+	<!-- <listener-class>org.weixin.repeater.RepeaterManager</listener-class> -->
+
+	<!-- Handles HTTP GET requests for /resources/** by efficiently serving 
+		up static resources in the ${webappRoot}/resources/ directory -->
+	<mvc:resources mapping="/res/**" location="/res/" />
+	<!-- 会自动转换Json和xml类型到网页输出的 -->
+	<mvc:annotation-driven>
+		<mvc:message-converters register-defaults="true">
+			<bean
+				class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+				<property name="objectMapper">
+					<bean class="com.fasterxml.jackson.databind.ObjectMapper">
+						<property name="serializationInclusion">
+							<value type="com.fasterxml.jackson.annotation.JsonInclude.Include">NON_NULL</value>
+						</property>
+					</bean>
+				</property>
+			</bean>
+		</mvc:message-converters>
+	</mvc:annotation-driven>
+	<!-- Declare a view resolver 增加前缀 / + 增加后缀.jsp -->
+	<bean id="viewResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver"
+		p:prefix="/" p:suffix=".jsp" p:order="1" />
+	<mvc:interceptors>
+		<!-- 总拦截器一枚 -->
+		<mvc:interceptor>
+			<mvc:mapping path="/**" />
+			<mvc:exclude-mapping path="/res/**" />
+			<bean class="com.swz.wechat.intercepter.AllRequestIntercepter" />
+		</mvc:interceptor>
+		<!-- 拦截器一个 微信客户端访问 -->
+		<mvc:interceptor>
+			<mvc:mapping path="/lbs/**" />
+			<mvc:mapping path="/jsa/**" />
+			<mvc:exclude-mapping path="/jsa/declare" />
+			<bean class="com.swz.wechat.intercepter.UserRequestIntercepter" />
+		</mvc:interceptor>
+		<!-- 拦截器一个 管理员平台 -->
+		<mvc:interceptor>
+			<mvc:mapping path="/mgr/**" />
+			<mvc:exclude-mapping path="/mgr/login" />
+			<bean class="com.swz.wechat.intercepter.AdminRequestIntercepter" />
+		</mvc:interceptor>
+		<!-- 拦截器一个 特定 -->
+		<!-- <mvc:interceptor> -->
+		<!-- <mvc:mapping path="/" /> -->
+		<!-- <bean class="com.swz.wechat.interceptor.RequestInterceptor" /> -->
+		<!-- </mvc:interceptor> -->
+	</mvc:interceptors>
+	<!-- <bean -->
+	<!-- class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"> -->
+	<!-- <property name="interceptors"> -->
+	<!-- <list> -->
+	<!-- <bean class="com.swz.wechat.interceptor.AllRequestInterceptor" /> -->
+	<!-- </list> -->
+	<!-- </property> -->
+	<!-- </bean> -->
+	<!-- <bean -->
+	<!-- class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter"> -->
+	<!-- <property name="messageConverters"> -->
+	<!-- <list> -->
+	<!-- <ref bean="mappingJacksonHttpMessageConverter" /> -->
+	<!-- </list> -->
+	<!-- </property> -->
+	<!-- </bean> -->
+	<!-- <bean id="mappingJacksonHttpMessageConverter" -->
+	<!-- class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"> -->
+	<!-- <property name="supportedMediaTypes"> -->
+	<!-- <list> -->
+	<!-- <value>text/html;charset=UTF-8</value> -->
+	<!-- </list> -->
+	<!-- </property> -->
+	<!-- </bean> -->
+	<!-- <bean -->
+	<!-- class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter"> -->
+	<!-- <property name="messageConverters"> -->
+	<!-- <list> -->
+	<!-- <ref bean="marshallingHttpMessageConverter" /> -->
+	<!-- </list> -->
+	<!-- </property> -->
+	<!-- </bean> -->
+	<!-- <bean id="marshallingHttpMessageConverter" -->
+	<!-- class="org.springframework.http.converter.xml.MarshallingHttpMessageConverter"> -->
+	<!-- <constructor-arg ref="jaxb2Marshaller" /> -->
+	<!-- </bean> -->
+	<!-- <bean id="jaxb2Marshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller"> -->
+	<!-- <property name="classesToBeBound"> -->
+	<!-- <list> -->
+	<!-- <value>org.weixin.receive.model.SetBaseMessage</value> -->
+	<!-- </list> -->
+	<!-- </property> -->
+	<!-- </bean> -->
+	<!-- <bean -->
+	<!-- class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver"> -->
+	<!-- <property name="order" value="1" /> -->
+	<!-- <property name="mediaTypes"> -->
+	<!-- <map> -->
+	<!-- <entry key="json" value="application/json" /> -->
+	<!-- <entry key="xml" value="application/xml" /> SPR-7504 -->
+	<!-- </map> -->
+	<!-- </property> -->
+	<!-- <property name="defaultViews"> -->
+	<!-- <list> -->
+	<!-- <bean class="net.zhepu.json.MappingJacksonJsonView" /> -->
+
+	<!-- <bean name="jaxb2MarshallingView" -->
+	<!-- class="org.springframework.web.servlet.view.xml.MarshallingView"> -->
+	<!-- <property name="marshaller" ref="jaxbMarshall"></property> -->
+	<!-- </bean> -->
+	<!-- </list> -->
+	<!-- </property> -->
+	<!-- <property name="ignoreAcceptHeader" value="true" /> -->
+	<!-- </bean> -->
+	<!-- xml视图,Jaxb2Marshaller,需要配置对象和对象添加Annotation xml注解，不需要添加额外的jar包 -->
+	<!-- <bean name="jaxb2MarshallingView" -->
+	<!-- class="org.springframework.web.servlet.view.xml.MarshallingView"> -->
+	<!-- <constructor-arg> -->
+	<!-- <bean class="org.springframework.oxm.jaxb.Jaxb2Marshaller"> -->
+	<!-- <property name="packagesToScan"> -->
+	<!-- <list> -->
+	<!-- <value>org.weixin.receive.model.*</value> -->
+	<!-- </list> -->
+	<!-- </property> -->
+	<!-- </bean> -->
+	<!-- </constructor-arg> -->
+	<!-- </bean> -->
+	<!-- 文件上传协议 需要com.springsource.org.apache.commons的fileupload-1.2.0和io-1.4.0 -->
+	<!-- <bean id="multipartResolver" -->
+	<!-- class="org.springframework.web.multipart.commons.CommonsMultipartResolver"> -->
+	<!-- <property name="maxInMemorySize" value="10240" /> -->
+	<!-- <property name="maxUploadSize" value="100000000" /> -->
+	<!-- <property name="defaultEncoding" value="UTF-8" /> -->
+	<!-- </bean> -->
+</beans>

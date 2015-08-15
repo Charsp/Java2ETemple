@@ -3,5 +3,80 @@
  "http://java.sun.com/dtd/web-app_2_3.dtd" >
 
 <web-app>
-  <display-name>Archetype Created Web Application</display-name>
+	<display-name>Archetype Created Web Application</display-name>
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath:spring-config.xml</param-value>
+	</context-param>
+	<!-- Spring 容器配置加载 -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+	<!-- request 监听 -->
+	<listener>
+		<listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
+	</listener>
+	<!-- The front controller of this Spring Web application, responsible for 
+		handling all application requests -->
+	<servlet>
+		<servlet-name>Dispatcher</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>classpath:spring-servlet.xml</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<!-- Map all *.spring requests to the DispatcherServlet for handling -->
+	<servlet-mapping>
+		<servlet-name>Dispatcher</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+	<!-- 字符编码过滤器,最上方添加 -->
+	<filter>
+		<filter-name>encodingFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+		<init-param>
+			<param-name>forceEncoding</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>encodingFilter</filter-name>
+		<!-- 只对mvc定义的进行utf8编码，其他编码看系统 -->
+		<servlet-name>Spring MVC Dispatcher Servlet</servlet-name>
+	</filter-mapping>
+
+	<!-- 添加程序JSP编码过滤器！ -->
+	<filter>
+		<filter-name>CharsetEncodingFilter</filter-name>
+		<filter-class>org.charsboll.interceptor.PageFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>CharsetEncodingFilter</filter-name>
+		<url-pattern>*.jsp</url-pattern>
+	</filter-mapping>
+
+	<!-- 异常捕获打开，在tomcat的web.xml中先打开 -->
+	<filter>
+		<filter-name>failedRequestFilter</filter-name>
+		<filter-class>
+			org.apache.catalina.filters.FailedRequestFilter
+		</filter-class>
+		<async-supported>true</async-supported>
+	</filter>
+
+	<error-page>
+		<error-code>404</error-code>
+		<location>/exception/error</location>
+	</error-page>
 </web-app>
